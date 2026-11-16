@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../database/DatabaseConnection.php';
+require_once __DIR__ . '/../models/autoload.php';
 
 // Alleen beheerders mogen medewerkers verwijderen
 Auth::requireAdmin('medewerker.php');
@@ -15,9 +17,6 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         exit;
     }
 
-    require_once __DIR__ . '/../database/DatabaseConnection.php';
-    require_once __DIR__ . '/../models/autoload.php';
-
     if (MedewerkerModel::delete($id)) {
         $_SESSION['success'] = "Medewerker is succesvol verwijderd.";
     } else {
@@ -29,4 +28,3 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 
 header('Location: medewerker.php');
 exit;
-

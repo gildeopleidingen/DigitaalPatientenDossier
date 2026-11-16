@@ -8,8 +8,7 @@
 -- MariaDB ondersteunt 'IF NOT EXISTS'. In standaard MySQL kan 'IF NOT EXISTS'
 -- worden weggelaten als de kolom nog niet bestaat.
 -- -----------------------------------------------------------------------
-ALTER TABLE `verzorgerregel` ADD COLUMN IF NOT EXISTS `is_deleted` TINYINT(1) NOT NULL DEFAULT 0;
-
+ALTER TABLE `verzorgerregel` ADD `is_deleted` TINYINT NOT NULL DEFAULT '0' AFTER `medewerkerid`;
 -- -----------------------------------------------------------------------
 -- 2. Telefoonnummer aanpassen naar maximaal 9 karakters
 -- Bestaande langere nummers eerst inkorten om #1265 (Data truncated) te voorkomen

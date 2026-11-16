@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../database/DatabaseConnection.php';
 require_once __DIR__ . '/../models/autoload.php';
 
-Auth::requireLogin();
+Auth::requireAdmin();
 
 $medewerkerModel = new MedewerkerModel();
 $errors = [];

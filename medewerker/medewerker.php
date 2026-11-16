@@ -2,7 +2,7 @@
 session_start();
 require_once('../includes/auth.php');
 include '../database/DatabaseConnection.php';
-
+Auth::requireAdmin();
 $conn = DatabaseConnection::getConn();
 
 if (!isset($_GET['q'])) {
