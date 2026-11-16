@@ -25,30 +25,17 @@ Om het project lokaal op te starten (bijvoorbeeld met XAMPP):
 3. **SQL scripts importeren:**
    Importeer de SQL-bestanden uit de map `SQLscripts/`:
    - Eerst `SQLscripts/dpd_empty.sql` (de tabellen).
-   - Daarna `SQLscripts/dpd_testdata01.sql` (de testdata).
    - Zorg dat migratiescripts `dpd_testdata20` en `dpd_testdata21` zijn uitgevoerd voor de soft-delete kolommen (`is_deleted`).
 
-4. **Configuratie controleren (`.env`):**
-   Maak eventueel een `.env` bestand aan in de hoofdmap met:
+4. **Configuratie instellen (`.env`):**
+   Maak een `.env` bestand aan in de hoofdmap met je lokale database-instellingen:
    ```env
    DB_HOST=localhost
-   DB_USER=root
-   DB_PASS=
+   DB_USER=jouw_db_gebruiker
+   DB_PASS=jouw_db_wachtwoord
    DB_NAME=dpd_dev
    ```
-   *(Als je geen `.env` bestand aanmaakt, gebruikt het systeem standaard `localhost`, `root`, leeg wachtwoord en `dpd_dev`).*
 
 5. **Openen in de browser:**
    Ga naar `http://localhost/DigitaalPatientenDossier/` (of jouw lokale mapnaam).
-
----
-
-## Standaard Inloggegevens
-
-Voor het testen zijn de volgende accounts beschikbaar:
-
-| Rol | E-mailadres | Wachtwoord |
-| :--- | :--- | :--- |
-| **Beheerder** | `medewerker@apotheek.nl` | `admin` |
-| **Zorgverlener** | `verpleegkundige@apotheek.nl` | `admin` |
 
