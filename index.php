@@ -49,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body style="background-color: #00365E;">
+    <header>
+        <a href="assets/test.pdf" target="_blank" class="btn-handleiding">Handleiding</a>
+    </header>
     <section>
         <div class="container">
             <div class="row justify-content-center">
