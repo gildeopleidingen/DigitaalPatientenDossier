@@ -4,6 +4,7 @@ if (!isset($_SESSION['loggedin_id'])) {
 }
 
 $headerLoggedInId = (int)$_SESSION['loggedin_id'];
+$isAdmin = ($_SESSION['rol'] ?? '') === 'beheerder';
 
 $headerUserStmt = DatabaseConnection::getConn()->prepare("SELECT naam, foto FROM medewerker WHERE id = ?");
 $headerUserStmt->bind_param("i", $headerLoggedInId);
@@ -90,6 +91,13 @@ $headerUserStmt->close();
                 }
             }
             ?>
+            <li class="nav-item">
+                <?php if ($isAdmin): ?>
+                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" ">Beheerder handleiding </a>
+                <?php else: ?>
+                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" ">Medewerker handleiding </a>
+                <?php endif; ?>
+            </li>
             <li class="nav-item dropdown profile-menu ms-3">
                 <a class="nav-link dropdown-toggle d-flex align-items-center p-0" href="javascript:void(0)" role="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="profile-pic">
