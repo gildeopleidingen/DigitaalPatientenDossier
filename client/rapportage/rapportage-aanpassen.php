@@ -1,7 +1,9 @@
 <?php
-session_start();
 include_once '../../database/DatabaseConnection.php';
 include_once '../../models/autoload.php';
+
+Auth::startSession();
+Auth::requireLogin();
 
 $rapportageId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($rapportageId <= 0) {
@@ -10,7 +12,7 @@ if ($rapportageId <= 0) {
 }
 
 $stmt = DatabaseConnection::getConn()->prepare("
-    SELECT r.*, vr.clientid 
+    SELECT r.*, vr.clientid, vr.medewerkerid 
     FROM rapport r 
     LEFT JOIN verzorgerregel vr ON r.verzorgerregelid = vr.id 
     WHERE r.id = ?
@@ -31,22 +33,44 @@ if ($clientId) {
     $_SESSION['clientId'] = $clientId;
 }
 
+$isAdmin = Auth::isAdmin();
+$isGekoppeld = false;
+$stmtKoppeling = DatabaseConnection::getConn()->prepare("SELECT id FROM verzorgerregel WHERE clientid = ? AND medewerkerid = ? AND is_deleted = 0 LIMIT 1");
+if ($stmtKoppeling) {
+    $loggedInId = Auth::id();
+    $stmtKoppeling->bind_param("ii", $clientId, $loggedInId);
+    $stmtKoppeling->execute();
+    if ($stmtKoppeling->get_result()->fetch_assoc()) {
+        $isGekoppeld = true;
+    }
+    $stmtKoppeling->close();
+}
+
+// Niet gekoppeld én geen admin: direct terugsturen
+if (!$isGekoppeld && !$isAdmin) {
+    header("Location: ./rapportage.php?id=" . $clientId);
+    exit;
+}
+
 if (isset($_POST['aanpassen'])) {
-    $rapportageInhoud = $_POST['inhoud'];
-    $rapportageId = $_POST['rapportageId'];
+    $rapportageInhoud = trim($_POST['inhoud'] ?? '');
+    $postRapportageId = (int)($_POST['rapportageId'] ?? 0);
 
-    $rapportageInhoud = nl2br($rapportageInhoud);
+    if ($postRapportageId === (int)$rapportage['id']) {
+        $stmt = DatabaseConnection::getConn()->prepare("UPDATE rapport SET inhoud = ? WHERE id = ?");
+        $stmt->bind_param("si", $rapportageInhoud, $postRapportageId);
+        $stmt->execute();
+        $stmt->close();
 
-    $tijd = date('Y-m-d H:i:s');
-    $stmt = DatabaseConnection::getConn()->prepare("UPDATE rapport SET inhoud = ?, datumtijd = ? WHERE id = ?");
-    $stmt->bind_param("ssi", $rapportageInhoud, $tijd, $rapportageId);
-    $stmt->execute();
-    $stmt->close();
-
-    $_SESSION['succes'] = 'Rapportage aangepast.';
-    header("Location: ./rapportage-aanpassen.php?id=$rapportageId");
+        $_SESSION['succes'] = 'Rapportage succesvol aangepast.';
+    }
+    header("Location: ./rapportage.php?id=" . $clientId);
     exit();
 }
+
+$inhoud = $rapportage['inhoud'] ?? '';
+// Oude <br> of <br /> tags uit historische data herstellen naar newlines
+$inhoud = preg_replace('/<br\s*\/?>/i', "\n", $inhoud);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,7 +81,7 @@ if (isset($_POST['aanpassen'])) {
     <link rel="Stylesheet" href="../../assets/css/client/rapportage.css">
     <link rel="stylesheet" href="../../assets/vendor/bootstrap/css/bootstrap.min.css">
     <link rel="icon" type="image/x-icon" href="../../assets/images/favicon.ico">
-    <title>Rapportage</title>
+    <title>Rapportage aanpassen</title>
 </head>
 
 <body>
@@ -74,25 +98,26 @@ if (isset($_POST['aanpassen'])) {
                     <div class="flex-grow-1 d-flex flex-column">
                         <?php if (isset($_SESSION['succes'])) { ?>
                             <div class="alert alert-success" role="alert">
-                                <?= $_SESSION['succes'] ?>
+                                <?= htmlspecialchars($_SESSION['succes']) ?>
                             </div>
-                            <?php unset($_SESSION['error']); ?>
+                            <?php unset($_SESSION['succes']); ?>
                         <?php } ?>
-                        <input type="hidden" value="<?= $rapportage['id'] ?>" name="rapportageId">
+                        <input type="hidden" value="<?= (int)$rapportage['id'] ?>" name="rapportageId">
                         <div class="rapportage flex-grow-1">
-                            <div class="display-5 text-primary mb-3">Rapportage aanpassen van <?= $rapportage['datumtijd'] ?></div>
+                            <div class="display-5 text-primary mb-3">Rapportage aanpassen van <?= htmlspecialchars($rapportage['datumtijd']) ?></div>
                             <div class="mb-3">
-                                <textarea name="inhoud" id="rapportage" rows="16" placeholder="Rapportage" class="form-control" required><?= $rapportage['inhoud'] ?></textarea>
+                                <textarea name="inhoud" id="rapportageInhoud" rows="16" placeholder="Rapportage" class="form-control" required><?= htmlspecialchars($inhoud) ?></textarea>
                             </div>
                         </div>
                     </div>
-                    <button type="submit" name="aanpassen" class="btn btn-secondary w-100 mt-3">Aanpassen</button>
-                    <a href="rapportage.php?id=<?= $clientId ?>" class="btn btn-secondary mt-3">Terug</a>
+                    <button type="submit" name="aanpassen" class="btn btn-primary w-100 mt-3">Aanpassen</button>
+                    <a href="rapportage.php?id=<?= (int)$clientId ?>" class="btn btn-secondary mt-3">Terug</a>
                 </form>
             </div>
         </div>
+    </div>
+    <script src="../../assets/vendor/jquery/jquery.min.js"></script>
+    <script src="../../assets/js/validatie.js"></script>
 </body>
-<script src="../../assets/vendor/jquery/jquery.min.js"></script>
-<script src="../../assets/js/validatie.js"></script>
 
 </html>
