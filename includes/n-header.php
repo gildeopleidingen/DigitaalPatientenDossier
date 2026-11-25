@@ -93,9 +93,9 @@ $headerUserStmt->close();
             ?>
             <li class="nav-item">
                 <?php if ($isAdmin): ?>
-                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" ">Beheerder handleiding </a>
+                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" >Beheerder handleiding </a>
                 <?php else: ?>
-                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" ">Medewerker handleiding </a>
+                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" >Medewerker handleiding </a>
                 <?php endif; ?>
             </li>
             <li class="nav-item dropdown profile-menu ms-3">
