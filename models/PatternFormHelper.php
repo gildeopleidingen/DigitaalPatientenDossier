@@ -84,8 +84,8 @@ class PatternFormHelper
         $sidebar = ob_get_clean();
 
         $alertBox = $alert ? "<div class='alert alert-danger mb-3'>$alert</div>" : "";
-        $prevBtn  = $prevUrl ? "<button name='navbutton' class='btn btn-secondary' type='submit' value='prev'>Vorige</button>" : "";
-        $nextBtn  = $nextUrl ? "<button name='navbutton' class='btn btn-secondary' type='submit' value='next'>Volgende</button>" : "";
+        $showPrev  = $prevUrl ? "<button name='navbutton' class='btn btn-secondary' type='submit' value='prev'>Vorige</button>" : "";
+        $showNext  = $nextUrl ? "<button name='navbutton' class='btn btn-secondary' type='submit' value='next'>Volgende</button>" : "";
         $clientId = htmlspecialchars((string)($_SESSION['clientId'] ?? ''));
 
         return "<!DOCTYPE html>
@@ -97,6 +97,7 @@ class PatternFormHelper
     <link rel='icon' type='image/x-icon' href='../../assets/images/favicon.ico'>
     <link rel='stylesheet' href='../../assets/css/client/patronen.css'>
     <link rel='stylesheet' href='../../assets/vendor/bootstrap/css/bootstrap.min.css'>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css'>
 </head>
 <body style='overflow: hidden;'>
     <form method='POST' data-client-id='$clientId'>
@@ -111,7 +112,7 @@ class PatternFormHelper
                         <div class='form'>
                             <div class='questionnaire'>$contentHtml</div>
                         </div>
-                        <div class='submit'>$prevBtn $nextBtn</div>
+                        <div class='submit'>$showPrev $showNext</div>
                     </div>
                 </div>
             </div>
