@@ -27,7 +27,7 @@ $_SESSION['client'] = $client;
 
 $rapportages = [];
 $stmt = DatabaseConnection::getConn()->prepare("
-    SELECT r.*, vr.id AS verzorgerregel_id, m.naam AS medewerker_naam, m.rol AS medewerker_rol 
+    SELECT r.*, vr.id AS verzorgerregel_id, vr.medewerkerid, m.naam AS medewerker_naam, m.rol AS medewerker_rol 
     FROM rapport r 
     LEFT JOIN verzorgerregel vr ON r.verzorgerregelid = vr.id 
     LEFT JOIN medewerker m ON vr.medewerkerid = m.id
@@ -41,10 +41,11 @@ if ($stmt) {
     $stmt->close();
 }
 
+$loggedInId = Auth::id();
+$isAdmin = Auth::isAdmin();
 $isGekoppeld = false;
 $stmtKoppeling = DatabaseConnection::getConn()->prepare("SELECT id FROM verzorgerregel WHERE clientid = ? AND medewerkerid = ? AND is_deleted = 0 LIMIT 1");
 if ($stmtKoppeling) {
-    $loggedInId = Auth::id();
     $stmtKoppeling->bind_param("ii", $clientId, $loggedInId);
     $stmtKoppeling->execute();
     if ($stmtKoppeling->get_result()->fetch_assoc()) {
@@ -52,7 +53,7 @@ if ($stmtKoppeling) {
     }
     $stmtKoppeling->close();
 }
-$magRapporteren = Auth::isAdmin() || $isGekoppeld;
+$magRapporteren = $isAdmin || $isGekoppeld;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -103,9 +104,18 @@ $magRapporteren = Auth::isAdmin() || $isGekoppeld;
                 }
 
                 $maanden = [
-                    1 => 'januari', 2 => 'februari', 3 => 'maart', 4 => 'april',
-                    5 => 'mei', 6 => 'juni', 7 => 'juli', 8 => 'augustus',
-                    9 => 'september', 10 => 'oktober', 11 => 'november', 12 => 'december'
+                    1 => 'januari',
+                    2 => 'februari',
+                    3 => 'maart',
+                    4 => 'april',
+                    5 => 'mei',
+                    6 => 'juni',
+                    7 => 'juli',
+                    8 => 'augustus',
+                    9 => 'september',
+                    10 => 'oktober',
+                    11 => 'november',
+                    12 => 'december'
                 ];
 
                 foreach ($rapportages as $rapport) {
@@ -116,19 +126,24 @@ $magRapporteren = Auth::isAdmin() || $isGekoppeld;
                     $tijd = $dt->format('H:i');
                     $auteur = !empty($rapport['medewerker_naam']) ? $rapport['medewerker_naam'] : 'Onbekend';
                     $rol = !empty($rapport['medewerker_rol']) ? ' (' . ucfirst($rapport['medewerker_rol']) . ')' : '';
+                    $isAuteur = (int)($rapport['medewerkerid'] ?? 0) === $loggedInId;
+                    $magAanpassen = $isAdmin || ($isGekoppeld && $isAuteur);
+                    $weergaveInhoud = preg_replace('/<br\s*\/?>\r?\n?/i', "\n", $rapport['inhoud'] ?? '');
                 ?>
-                    <div class="card mb-3 shadow-sm border">
+                    <div class="card mb-3 shadow-sm border" style="max-width: 99%;">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <div>
                                 <h5 class="mb-1 text-primary fw-bold">Rapportage van <?= $dag . ' ' . $maand . ' ' . $jaar ?> om <?= $tijd ?></h5>
                                 <small class="text-muted">Geschreven door: <strong><?= htmlspecialchars($auteur) ?></strong><?= htmlspecialchars($rol) ?></small>
                             </div>
-                            <a href="rapportage-aanpassen.php?id=<?= (int)$rapport['id'] ?>" class="btn btn-sm btn-outline-secondary">
-                                <i class="fa fa-pen me-1"></i> Aanpassen
-                            </a>
+                            <?php if ($magAanpassen): ?>
+                                <a href="rapportage-aanpassen.php?id=<?= (int)$rapport['id'] ?>" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fa fa-pen me-1"></i> Aanpassen
+                                </a>
+                            <?php endif; ?>
                         </div>
                         <div class="card-body">
-                            <p class="card-text text-dark" style="white-space: pre-line;"><?= htmlspecialchars($rapport['inhoud']) ?></p>
+                            <p class="card-text text-dark" style="white-space: pre-line; overflow-wrap: anywhere;"><?= htmlspecialchars($weergaveInhoud) ?></p>
                         </div>
                     </div>
                 <?php

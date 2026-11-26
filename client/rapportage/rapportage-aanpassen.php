@@ -33,11 +33,11 @@ if ($clientId) {
     $_SESSION['clientId'] = $clientId;
 }
 
+$loggedInId = Auth::id();
 $isAdmin = Auth::isAdmin();
 $isGekoppeld = false;
 $stmtKoppeling = DatabaseConnection::getConn()->prepare("SELECT id FROM verzorgerregel WHERE clientid = ? AND medewerkerid = ? AND is_deleted = 0 LIMIT 1");
 if ($stmtKoppeling) {
-    $loggedInId = Auth::id();
     $stmtKoppeling->bind_param("ii", $clientId, $loggedInId);
     $stmtKoppeling->execute();
     if ($stmtKoppeling->get_result()->fetch_assoc()) {
@@ -46,31 +46,40 @@ if ($stmtKoppeling) {
     $stmtKoppeling->close();
 }
 
-// Niet gekoppeld én geen admin: direct terugsturen
-if (!$isGekoppeld && !$isAdmin) {
+$isAuteur = (int)($rapportage['medewerkerid'] ?? 0) === $loggedInId;
+$magAanpassen = $isAdmin || ($isGekoppeld && $isAuteur);
+
+// Alleen de auteur of een admin mag aanpassen
+if (!$magAanpassen) {
     header("Location: ./rapportage.php?id=" . $clientId);
     exit;
 }
+
+$error = '';
 
 if (isset($_POST['aanpassen'])) {
     $rapportageInhoud = trim($_POST['inhoud'] ?? '');
     $postRapportageId = (int)($_POST['rapportageId'] ?? 0);
 
-    if ($postRapportageId === (int)$rapportage['id']) {
-        $stmt = DatabaseConnection::getConn()->prepare("UPDATE rapport SET inhoud = ? WHERE id = ?");
-        $stmt->bind_param("si", $rapportageInhoud, $postRapportageId);
-        $stmt->execute();
-        $stmt->close();
+    if ($rapportageInhoud === '') {
+        $error = 'Rapportage mag niet leeg zijn.';
+    } else {
+        if ($postRapportageId === (int)$rapportage['id']) {
+            $stmt = DatabaseConnection::getConn()->prepare("UPDATE rapport SET inhoud = ? WHERE id = ?");
+            $stmt->bind_param("si", $rapportageInhoud, $postRapportageId);
+            $stmt->execute();
+            $stmt->close();
 
-        $_SESSION['succes'] = 'Rapportage succesvol aangepast.';
+            $_SESSION['succes'] = 'Rapportage succesvol aangepast.';
+        }
+        header("Location: ./rapportage.php?id=" . $clientId);
+        exit();
     }
-    header("Location: ./rapportage.php?id=" . $clientId);
-    exit();
 }
 
-$inhoud = $rapportage['inhoud'] ?? '';
-// Oude <br> of <br /> tags uit historische data herstellen naar newlines
-$inhoud = preg_replace('/<br\s*\/?>/i', "\n", $inhoud);
+$inhoud = isset($_POST['inhoud']) ? $_POST['inhoud'] : ($rapportage['inhoud'] ?? '');
+// Oude tags herstellen naar newlines
+$inhoud = preg_replace('/<br\s*\/?>\r?\n?/i', "\n", $inhoud);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -96,6 +105,11 @@ $inhoud = preg_replace('/<br\s*\/?>/i', "\n", $inhoud);
             <div class="mt-4 mb-3 bg-white p-3 d-flex flex-column" style="height: 96%; overflow: auto;">
                 <form method="POST" class="needs-validation flex-grow-1 d-flex flex-column" novalidate>
                     <div class="flex-grow-1 d-flex flex-column">
+                        <?php if (!empty($error)) { ?>
+                            <div class="alert alert-danger" role="alert">
+                                <?= htmlspecialchars($error) ?>
+                            </div>
+                        <?php } ?>
                         <?php if (isset($_SESSION['succes'])) { ?>
                             <div class="alert alert-success" role="alert">
                                 <?= htmlspecialchars($_SESSION['succes']) ?>

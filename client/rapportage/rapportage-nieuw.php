@@ -49,29 +49,6 @@ if (!$verzorgerregelId && !$isAdmin) {
     exit;
 }
 
-// 2. Admin die nog niet gekoppeld is: automatisch koppelen als verzorger
-if (!$verzorgerregelId && $isAdmin) {
-    $stmtCheck = $conn->prepare("SELECT id FROM verzorgerregel WHERE clientid = ? AND medewerkerid = ? LIMIT 1");
-    $stmtCheck->bind_param("ii", $clientId, $loggedInId);
-    $stmtCheck->execute();
-    $existing = $stmtCheck->get_result()->fetch_assoc();
-    $stmtCheck->close();
-
-    if ($existing) {
-        $verzorgerregelId = (int)$existing['id'];
-        $stmtRestore = $conn->prepare("UPDATE verzorgerregel SET is_deleted = 0 WHERE id = ?");
-        $stmtRestore->bind_param("i", $verzorgerregelId);
-        $stmtRestore->execute();
-        $stmtRestore->close();
-    } else {
-        $stmtInsert = $conn->prepare("INSERT INTO verzorgerregel (clientid, medewerkerid, is_deleted) VALUES (?, ?, 0)");
-        $stmtInsert->bind_param("ii", $clientId, $loggedInId);
-        $stmtInsert->execute();
-        $verzorgerregelId = (int)$stmtInsert->insert_id;
-        $stmtInsert->close();
-    }
-}
-
 $error = '';
 
 if (isset($_POST['opslaan'])) {
@@ -80,6 +57,29 @@ if (isset($_POST['opslaan'])) {
     if ($inhoud === '') {
         $error = 'Rapportage mag niet leeg zijn.';
     } else {
+        // 2. Admin die nog niet gekoppeld is: automatisch koppelen als verzorger
+        if (!$verzorgerregelId && $isAdmin) {
+            $stmtCheck = $conn->prepare("SELECT id FROM verzorgerregel WHERE clientid = ? AND medewerkerid = ? LIMIT 1");
+            $stmtCheck->bind_param("ii", $clientId, $loggedInId);
+            $stmtCheck->execute();
+            $existing = $stmtCheck->get_result()->fetch_assoc();
+            $stmtCheck->close();
+
+            if ($existing) {
+                $verzorgerregelId = (int)$existing['id'];
+                $stmtRestore = $conn->prepare("UPDATE verzorgerregel SET is_deleted = 0 WHERE id = ?");
+                $stmtRestore->bind_param("i", $verzorgerregelId);
+                $stmtRestore->execute();
+                $stmtRestore->close();
+            } else {
+                $stmtInsert = $conn->prepare("INSERT INTO verzorgerregel (clientid, medewerkerid, is_deleted) VALUES (?, ?, 0)");
+                $stmtInsert->bind_param("ii", $clientId, $loggedInId);
+                $stmtInsert->execute();
+                $verzorgerregelId = (int)$stmtInsert->insert_id;
+                $stmtInsert->close();
+            }
+        }
+
         // Maak de nieuwe rapportage aan
         $tijd = date('Y-m-d H:i:s');
         $stmtRapport = $conn->prepare("INSERT INTO rapport (verzorgerregelid, datumtijd, inhoud) VALUES (?, ?, ?)");
@@ -159,24 +159,35 @@ if (isset($_POST['opslaan'])) {
                 'smart': "S (Specifiek): \nM (Meetbaar): \nA (Acceptabel): \nR (Realistisch): \nT (Tijdsgebonden): "
             };
 
+            function getRapportageTextarea() {
+                return document.getElementById('rapportageInhoud') || document.querySelector('textarea[name="inhoud"]');
+            }
+
             function insertTemplate(type) {
-                const textarea = document.getElementById('rapportageInhoud') || document.querySelector('textarea[name="inhoud"]');
+                const textarea = getRapportageTextarea();
                 if (!textarea) return;
 
                 const tekst = sjablonen[type] || '';
                 if (!tekst) return;
 
-                // Vervangt alle vorige tekst direct door het gekozen sjabloon
                 textarea.value = tekst;
                 textarea.focus();
             }
 
+            function SetTextarea() {
+                const textarea = getRapportageTextarea();
+                if (!textarea || textarea.value.trim() !== '') return;
+                insertTemplate('soep');
+            }
+
             function wisVeld() {
-                const textarea = document.getElementById('rapportageInhoud') || document.querySelector('textarea[name="inhoud"]');
+                const textarea = getRapportageTextarea();
                 if (!textarea) return;
                 textarea.value = '';
                 textarea.focus();
             }
+
+            SetTextarea();
         </script>
     <?php endif; ?>
 </body>
