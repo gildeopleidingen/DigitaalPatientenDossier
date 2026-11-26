@@ -49,6 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body style="background-color: #00365E;">
+    <header>
+        <div class="login_header">
+            <a href="assets/inloggen_handleiding.pdf" target="_blank" rel="noopener" class="btn-handleiding">Handleiding</a>
+        </div>
+    </header>
     <section>
         <div class="container">
             <div class="row justify-content-center">
