@@ -1,10 +1,12 @@
 <?php
+require_once __DIR__ . '/../models/Auth.php';
+
 if (!isset($_SESSION['loggedin_id'])) {
     header("Location: ../index.php");
 }
 
 $headerLoggedInId = (int)$_SESSION['loggedin_id'];
-$isAdmin = ($_SESSION['rol'] ?? '') === 'beheerder';
+$isAdmin = Auth::isAdmin();
 
 $headerUserStmt = DatabaseConnection::getConn()->prepare("SELECT naam, foto FROM medewerker WHERE id = ?");
 $headerUserStmt->bind_param("i", $headerLoggedInId);
@@ -84,7 +86,7 @@ $headerUserStmt->close();
                 // Gebruik absolute paden
                 if ($key == "dashboard") {
                     echo "<li class='nav-item'><a href='/dashboard.php' class='nav-link $active' id='$key'>" . ucfirst($value) . "</a></li>";
-                } else if ($key == "medewerker" && $_SESSION['rol'] != 'beheerder' ) {
+                } else if ($key == "medewerker" && !$isAdmin) {
 
                 } else {
                     echo "<li class='nav-item'><a href='/{$value}/{$key}.php' class='nav-link $active' id='$key'>" . ucfirst($value) . "</a></li>";
@@ -93,9 +95,9 @@ $headerUserStmt->close();
             ?>
             <li class="nav-item">
                 <?php if ($isAdmin): ?>
-                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" >Beheerder handleiding </a>
+                    <a href="/assets/beheerder_handleiding.pdf" target="_blank" rel="noopener" class="nav-link" onmouseup="this.blur()">Beheerder handleiding </a>
                 <?php else: ?>
-                    <a href="/assets/test.pdf" target="_blank" class="nav-link" onmouseup="this.blur()" >Medewerker handleiding </a>
+                    <a href="/assets/medewerker_handleiding.pdf" target="_blank" rel="noopener" class="nav-link" onmouseup="this.blur()">Medewerker handleiding </a>
                 <?php endif; ?>
             </li>
             <li class="nav-item dropdown profile-menu ms-3">

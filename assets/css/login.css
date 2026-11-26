@@ -37,7 +37,7 @@
 
 
 h1 {
-    font-family: 'Inter Tight' , sans-serif;
+    font-family: 'Inter Tight', sans-serif;
     font-weight: lighter;
     color: #00365E;
 }
@@ -47,10 +47,7 @@ section {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    
 }
-
-
 
 .card-body a img {
     position: relative;
@@ -62,4 +59,31 @@ section {
 .card-body form {
     position: relative;
     z-index: 1;
+}
+
+
+@media (max-width: 768px) {
+    .login_header {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-height: 768px) {
+    .login_header {
+        justify-content: center;
+        width: 100%;
+        height: 55px;
+    }
+
+    .card {
+        margin-top: 55px;
+        max-width: 390px;
+        max-height: 350px;
+    }
+
+    .card-body a img {
+        max-height: 90px;
+        width: auto;
+    }
 }

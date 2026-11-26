@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body style="background-color: #00365E;">
     <header>
         <div class="login_header">
-            <a href="assets/test.pdf" target="_blank" class="btn-handleiding">Handleiding</a>
+            <a href="assets/inloggen_handleiding.pdf" target="_blank" rel="noopener" class="btn-handleiding">Handleiding</a>
         </div>
     </header>
     <section>
